@@ -39,7 +39,6 @@ func main() {
 	flags.LoadParams(&params)
 	params.Content.AddSection(
 		templates.IntroSection(params),
-		//templates.GettingStartedSection(params),
 		templates.BuildModelSection(params),
 		templates.ModmakeCLISection(params),
 	)

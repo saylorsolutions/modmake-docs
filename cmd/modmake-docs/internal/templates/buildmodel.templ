@@ -95,6 +95,69 @@ templ BuildModel_Invocation(params Params) {
 	<img src={join(params.BasePath, "/img/invocation.png")} alt="invocation example"/>
 }
 
+templ BuildModel_Composability() {
+	<p>
+		Modmake build logic can be composed of many pieces, and there are a few approaches to this.
+	</p>
+	<p>
+		The <a href="https://pkg.go.dev/github.com/saylorsolutions/modmake#Build.Import">Import</a> function is one of the main method used. A build can be decomposed into multiple <i>sub-builds</i> that are then imported together and referenced with a prefix.
+		The prefix is important to prevent collisions between different builds' step names.
+	</p>
+	@CodeBlock(`
+b := NewBuild()
+
+another := NewBuild()
+another.Test().Does(Go().TestAll())
+b.Import("another", another)
+
+// Now we can reference the other build with the prefix "another:".
+b.Step("another:test")
+b.Execute()
+`)
+	<p>
+		A variant of <code>Import</code> is <a href="https://pkg.go.dev/github.com/saylorsolutions/modmake#Build.ImportAndLink">ImportAndLink</a>, which intrinsically links the sub-build steps to that of its parent.
+	</p>
+	<p>
+		Another mechanism is <a href="https://pkg.go.dev/github.com/saylorsolutions/modmake#CallBuild">CallBuild</a>, which allows invoking steps in an unrelated build.
+		This is a very useful mechanism when working with Git submodules that use modmake.
+	</p>
+}
+
+templ BuildModel_AppBuild() {
+	<p>
+		<a href="https://pkg.go.dev/github.com/saylorsolutions/modmake#AppBuild">AppBuild</a> is a higher level concept that allows {"for"} less typing when an app build follows a common way of producing distributions.
+		It follows a similar pattern as a normal build, but it's specifically tailored to producing builds of the same application for different OS/arch combinations with similar expectations.
+		Each combination of OS and arch in an <code>AppBuild</code> is called a <code>Variant</code>, and they can be individually customized or their build step can be configured at the <code>AppBuild</code> level.
+	</p>
+	@CodeBlock(`
+a := NewAppBuild("modmake", "cmd/modmake", version).
+	Build(func(gb *GoBuild) {
+		gb.
+			StripDebugSymbols().
+			SetVariable("main", "gitHash", git.CommitHash()).
+			SetVariable("main", "gitBranch", git.BranchName())
+	})
+a.HostVariant()
+a.Variant("windows", "amd64")
+a.Variant("linux", "amd64")
+a.Variant("linux", "arm64")
+a.Variant("darwin", "amd64")
+a.Variant("darwin", "arm64")
+b.ImportApp(a)
+`)
+	<ul>
+		<li>A new AppBuild is created with some basic information: name, path, and version.</li>
+		<li>The AppBuild above is using a consistent build step configured at the higher level (variants can override this logic).</li>
+		<li>Packaging is not being configured, so the defaults are used.</li>
+		<ul>
+			<li>For Windows builds, the default is to package the binary in a zip file.</li>
+			<li>For everything else, the binary is packaged in a tar.gz.</li>
+		</ul>
+		<li>There's also a <code>HostVariant</code> that will match your build machine's OS and arch. This is most useful for local testing.</li>
+		<li>An additional step will be generated automatically for each AppBuild: install. To reference this step, prefix it with the AppBuild name as a prefix. <code>modmake:install</code> would be used in the code above.</li>
+	</ul>
+}
+
 templ BuildModel_APIPatterns() {
 	<p>There are a few common patterns that should be consistently represented around the code base.</p>
 	<ul>
@@ -102,6 +165,7 @@ templ BuildModel_APIPatterns() {
 			<code>Runner</code> may be a parameter or a return value, but <code>Task</code> may only be a return value.
 			<ul>
 				<li>This is because a Task is just a function implementing Runner, but a Runner may be <i>anything</i> with a <code>Run</code> method.</li>
+				<li>There are a few exceptions to this, mainly for utilities that are specialized for working with Tasks.</li>
 			</ul>
 		</li>
 		<li>
