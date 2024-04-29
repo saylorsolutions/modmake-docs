@@ -1,0 +1,30 @@
+package templates
+
+templ Intro() {
+	<p>
+		Modmake is a build system inspired by <a href="https://www.gnu.org/software/make/">GNU Make</a> and <a href="https://gradle.org/">Gradle</a>,
+		but specifically tailored to Go modules.
+		It also makes an attempt at providing a lot of the fundamental automation needs of Go projects in development.
+	</p>
+	<aside>
+		<b>This software is still early in development and pre-v1</b>, but it's already in use for orchestrating non-trivial Go builds.
+		Any feedback on the design or functionality of Modmake may be reported in a <a href="https://github.com/saylorsolutions/modmake/issues/new/choose" target="_blank">new issue</a> on GitHub.
+		<br/>
+		Thanks in advance! 😁
+	</aside>
+}
+
+templ Intro_ProjectCommitments(params Params) {
+    <ul>
+        <li>
+            The last 3 major Go versions will be supported. At the time of this writing {params.LatestGoVersion} is the latest, so this module specifies {params.LatestSupportedGoVersion}.
+        </li>
+        <li>
+            The primarily supported method for invoking Modmake builds is <code>go run</code>. The <a href="#modmake-cli">Modmake CLI</a> just makes that a little easier.
+        </li>
+        <li>
+            A user should need nothing more than the Go toolchain (of a supported version) to use Modmake. This supports an idealized slow ramp to onboarding with this system.
+            However, additional tooling may be required as more automation requirements are introduced, so the <code>tools</code> step should be used to <code>go install</code> additional dependencies.
+        </li>
+    </ul>
+}

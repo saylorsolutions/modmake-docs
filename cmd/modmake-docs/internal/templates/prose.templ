@@ -1,0 +1,79 @@
+package templates
+
+import (
+	"strings"
+)
+
+templ Prose(comps ...templ.Component) {
+	for _, comp := range comps {
+		@comp
+	}
+}
+
+func join(s ...string) string {
+	return strings.Join(s, "")
+}
+
+func joinHref(s ...string) templ.SafeURL {
+	return templ.SafeURL(join(s...))
+}
+
+templ Heading(section *Section) {
+	<h1 id={join(section.ID)}>{section.HeaderText}</h1>
+}
+
+templ HeadingLink(section *Section) {
+	<a href={joinHref("#", section.ID)}>{section.HeaderText}</a>
+}
+
+templ SubHeading(section *Section, sub *SubSection) {
+	<h2 id={join(section.ID, "_", sub.ID)}>{sub.HeaderText}</h2>
+}
+
+templ SubHeadingLink(section *Section, sub *SubSection) {
+	<a href={joinHref("#", section.ID, "_", sub.ID)}>{sub.HeaderText}</a>
+}
+
+templ Aside(comps ...templ.Component) {
+	<aside>
+	@Prose(comps...)
+	</aside>
+}
+
+templ Code(text string) {
+	<code>{text}</code>
+}
+
+templ CodeBlock(text string) {
+	<pre>@templ.Raw(text)</pre>
+}
+
+templ A(href, text string) {
+	<a href={joinHref(href)}>{text}</a>
+}
+
+templ P(comps ...templ.Component) {
+	<p>@Prose(comps...)</p>
+}
+
+templ S(text string) {
+	{text}
+}
+
+templ PS(text string) {
+	<p>{text}</p>
+}
+
+templ UL(comps ...templ.Component) {
+	<ul>
+	@Prose(comps...)
+	</ul>
+}
+
+templ LI(comps ...templ.Component) {
+	<li>@Prose(comps...)</li>
+}
+
+templ Bold(text string) {
+	<b>{text}</b>
+}
