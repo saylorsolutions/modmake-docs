@@ -41,6 +41,7 @@ func main() {
 		templates.IntroSection(params),
 		templates.BuildModelSection(params),
 		templates.ModmakeCLISection(params),
+		templates.UtilitiesSection(),
 	)
 	var command string
 	if flags.flags.NArg() > 0 {

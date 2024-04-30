@@ -40,6 +40,22 @@ templ Aside(comps ...templ.Component) {
 	</aside>
 }
 
+templ DocLink(parent, child string) {
+	if len(parent) > 0 {
+		<a href={joinHref("https://pkg.go.dev/github.com/saylorsolutions/modmake#", parent, ".", child)}>{child}</a>{" "}
+	} else {
+		<a href={joinHref("https://pkg.go.dev/github.com/saylorsolutions/modmake#", child)}>{child}</a>{" "}
+	}
+}
+
+templ PkgDocLink(pkg, parent, child string) {
+	if len(parent) > 0 {
+		<a href={joinHref("https://pkg.go.dev/github.com/saylorsolutions/modmake", pkg, "#", parent, ".", child)}>{child}</a>{" "}
+	} else {
+		<a href={joinHref("https://pkg.go.dev/github.com/saylorsolutions/modmake", pkg, "#", child)}>{child}</a>{" "}
+	}
+}
+
 templ Code(text string) {
 	<code>{text}</code>
 }

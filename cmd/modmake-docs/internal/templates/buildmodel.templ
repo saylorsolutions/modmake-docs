@@ -112,6 +112,7 @@ b.Import("another", another)
 
 // Now we can reference the other build with the prefix "another:".
 b.Step("another:test")
+// Because "another:test" is now an established step, it can be invoked with "go run" too.
 b.Execute()
 `)
 	<p>
@@ -120,6 +121,7 @@ b.Execute()
 	<p>
 		Another mechanism is <a href="https://pkg.go.dev/github.com/saylorsolutions/modmake#CallBuild">CallBuild</a>, which allows invoking steps in an unrelated build.
 		This is a very useful mechanism when working with Git submodules that use modmake.
+		There's an <a href="https://pkg.go.dev/github.com/saylorsolutions/modmake#example-CallBuild">example</a> {"for"} reference.
 	</p>
 }
 

@@ -6,6 +6,6 @@ func IntroSection(params Params) *Section {
 	).AddSubSection("project-commitments", "Project Commitments",
 		Intro_ProjectCommitments(params),
 	).AddSubSection("getting-started", "Getting Started",
-		GettingStarted(params),
+		Intro_GettingStarted(params),
 	)
 }
