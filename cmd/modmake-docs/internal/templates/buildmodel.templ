@@ -33,16 +33,17 @@ templ BuildModel_Steps() {
 		Step dependencies are arranged as a directed acyclic graph (a <a href="https://en.wikipedia.org/wiki/Directed_acyclic_graph">DAG</a>).
 		If a cycle is detected during invocation — or while running the builtin <code>graph</code> step — then the Build will panic to include details of the error.
 	</p>
-	<aside>
-		<b>Note:</b> a build step will do nothing by default.
-		A step's <a href="https://pkg.go.dev/github.com/saylorsolutions/modmake#Step.Does">Does</a> method must be used to make a Step perform some operation.
-	</aside>
-	<aside>
-		A step's <a href="https://pkg.go.dev/github.com/saylorsolutions/modmake#Step.BeforeRun">BeforeRun</a> hooks will run in order <i>after</i> dependent steps have executed.
-		Dependencies are also executed in order.
-	</aside>
 	<p>
-		Here are the default steps added by default to each build.
+		A step's <a href="https://pkg.go.dev/github.com/saylorsolutions/modmake#Step.BeforeRun">BeforeRun</a> hooks will run in order <i>after</i> dependency steps have executed in order.
+	</p>
+	<ul>
+		<li>Dependencies are good for orchestration and ensuring order of operations.</li>
+		<li>Before/After hooks are good for actions that are <em>intrinsic</em> to a <code>Step</code>'s execution.</li>
+	</ul>
+	<h3>Default Steps</h3>
+	<p>
+		Here are the steps added by default to each <code>NewBuild</code>.
+		This is done to ensure a consistent base structure for every build.
 	</p>
 	<ul>
 		<li><code>tools</code> - This step is for installing external tools that may be needed for the Build to function as expected.</li>
@@ -53,16 +54,24 @@ templ BuildModel_Steps() {
 		<li><code>package</code> - This step is for packaging executables into an easily distributable/deployable format. </li>
 	</ul>
 	<aside>
-		Additionally, the steps <code>graph</code> and <code>steps</code> may not be created, as these are reserved for getting step dependencies and listing, respectively.
+		<b>Note:</b> the default build Steps do nothing by default.
+		A default Step's <a href="https://pkg.go.dev/github.com/saylorsolutions/modmake#Step.Does">Does</a> or <a href="https://pkg.go.dev/github.com/saylorsolutions/modmake#Step.DependsOn">DependsOn</a> method must be used to make it perform some operation.
 	</aside>
+	<h3>Utility Steps</h3>
+	<ul>
+		<li><code>graph</code> - Prints a graph of steps and their dependencies.</li>
+		<li><code>steps</code> - Prints a list of all steps in a build and their descriptions. Very greppable.</li>
+	</ul>
 }
 
 templ BuildModel_Tasks() {
 	<p>
-		At a more atomic level there exists a <code>Task</code>.
-		A Task enables more flexible expression, which contrasts with a Step that provides more structure and standardized expression.
-		While a Task and a Step have some similarities, they serve very different purposes within a Build. Namely, only a Step may be invoked directly.
+		A <code>Task</code> fits into Modmake at a more atomic level.
 	</p>
+	<ul>
+		<li>A <code>Task</code> enables more flexible expression of build logic, which contrasts with the structure and standardized expression of a <code>Step</code>.</li>
+		<li>While a <code>Task</code> and a <code>Step</code> have similarities, they serve very different purposes within a <code>Build</code>. Namely, only a <code>Step</code> may be invoked directly with <code>go run</code>.</li>
+	</ul>
 	<p>
 		A Task is able to chain other tasks with <a href="https://pkg.go.dev/github.com/saylorsolutions/modmake#Task.Then">Then</a>,
 		and handle failure with <a href="https://pkg.go.dev/github.com/saylorsolutions/modmake#Task.Catch">Catch</a>.
@@ -75,10 +84,10 @@ templ BuildModel_Tasks() {
 Task(func(ctx context.Context) error {
     // Custom task logic here
     return nil
-}`)
+})`)
 	<aside>
-		Any Task can chain other operations after it, but this can be cumbersome with many Tasks. Multiple Tasks may be run in a sequence with the <a href="https://pkg.go.dev/github.com/saylorsolutions/modmake#Script">Script</a> helper function.
-		Any failure that occurs in the Script will stop the sequence, and the error will be immediately returned.
+		Any Task can chain other operations after it, but this can be cumbersome with many Tasks. Many Tasks may instead be run in a sequence with the <a href="https://pkg.go.dev/github.com/saylorsolutions/modmake#Script">Script</a> helper function.
+		Any failure that occurs in the Script will stop the sequence, and the error will be returned.
 	</aside>
 }
 
@@ -93,71 +102,6 @@ templ BuildModel_Invocation(params Params) {
 		<li>Commit build code to version control so others can use the Build steps.</li>
 	</ol>
 	<img src={join(params.BasePath, "/img/invocation.png")} alt="invocation example"/>
-}
-
-templ BuildModel_Composability() {
-	<p>
-		Modmake build logic can be composed of many pieces, and there are a few approaches to this.
-	</p>
-	<p>
-		The <a href="https://pkg.go.dev/github.com/saylorsolutions/modmake#Build.Import">Import</a> function is one of the main method used. A build can be decomposed into multiple <i>sub-builds</i> that are then imported together and referenced with a prefix.
-		The prefix is important to prevent collisions between different builds' step names.
-	</p>
-	@CodeBlock(`
-b := NewBuild()
-
-another := NewBuild()
-another.Test().Does(Go().TestAll())
-b.Import("another", another)
-
-// Now we can reference the other build with the prefix "another:".
-b.Step("another:test")
-// Because "another:test" is now an established step, it can be invoked with "go run" too.
-b.Execute()
-`)
-	<p>
-		A variant of <code>Import</code> is <a href="https://pkg.go.dev/github.com/saylorsolutions/modmake#Build.ImportAndLink">ImportAndLink</a>, which intrinsically links the sub-build steps to that of its parent.
-	</p>
-	<p>
-		Another mechanism is <a href="https://pkg.go.dev/github.com/saylorsolutions/modmake#CallBuild">CallBuild</a>, which allows invoking steps in an unrelated build.
-		This is a very useful mechanism when working with Git submodules that use modmake.
-		There's an <a href="https://pkg.go.dev/github.com/saylorsolutions/modmake#example-CallBuild">example</a> {"for"} reference.
-	</p>
-}
-
-templ BuildModel_AppBuild() {
-	<p>
-		<a href="https://pkg.go.dev/github.com/saylorsolutions/modmake#AppBuild">AppBuild</a> is a higher level concept that allows {"for"} less typing when an app build follows a common way of producing distributions.
-		It follows a similar pattern as a normal build, but it's specifically tailored to producing builds of the same application for different OS/arch combinations with similar expectations.
-		Each combination of OS and arch in an <code>AppBuild</code> is called a <code>Variant</code>, and they can be individually customized or their build step can be configured at the <code>AppBuild</code> level.
-	</p>
-	@CodeBlock(`
-a := NewAppBuild("modmake", "cmd/modmake", version).
-	Build(func(gb *GoBuild) {
-		gb.
-			StripDebugSymbols().
-			SetVariable("main", "gitHash", git.CommitHash()).
-			SetVariable("main", "gitBranch", git.BranchName())
-	})
-a.HostVariant()
-a.Variant("windows", "amd64")
-a.Variant("linux", "amd64")
-a.Variant("linux", "arm64")
-a.Variant("darwin", "amd64")
-a.Variant("darwin", "arm64")
-b.ImportApp(a)
-`)
-	<ul>
-		<li>A new AppBuild is created with some basic information: name, path, and version.</li>
-		<li>The AppBuild above is using a consistent build step configured at the higher level (variants can override this logic).</li>
-		<li>Packaging is not being configured, so the defaults are used.</li>
-		<ul>
-			<li>For Windows builds, the default is to package the binary in a zip file.</li>
-			<li>For everything else, the binary is packaged in a tar.gz.</li>
-		</ul>
-		<li>There's also a <code>HostVariant</code> that will match your build machine's OS and arch. This is most useful for local testing.</li>
-		<li>An additional step will be generated automatically for each AppBuild: install. To reference this step, prefix it with the AppBuild name as a prefix. <code>modmake:install</code> would be used in the code above.</li>
-	</ul>
 }
 
 templ BuildModel_APIPatterns() {
