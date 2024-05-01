@@ -22,9 +22,9 @@ func testParams() (context.Context, strings.Builder, Params) {
 	p.Content = Content{
 		Sections: []*Section{
 			IntroSection(p),
-			GettingStartedSection(p),
 			BuildModelSection(p),
 			ModmakeCLISection(p),
+			UtilitiesSection(),
 		},
 	}
 	var buf strings.Builder

@@ -58,7 +58,7 @@ func main() {
 	var cmdErr error
 	switch command {
 	case "generate":
-		cmdErr = doGenerate(flags, params)
+		cmdErr = doGenerate(params)
 	case "serve":
 		cmdErr = doServe(flags, params)
 	default:
@@ -69,8 +69,4 @@ func main() {
 		flags.Error("Failed to run command '%s': %v", command, cmdErr)
 		os.Exit(1)
 	}
-}
-
-func doGenerate(aflags *AppFlags, params templates.Params) error {
-	return nil
 }
